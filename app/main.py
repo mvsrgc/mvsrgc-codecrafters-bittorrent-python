@@ -12,25 +12,30 @@ from dataclasses import dataclass
 # - decode_bencode(b"5:hello") -> b"hello"
 # - decode_bencode(b"10:hello12345") -> b"hello12345"
 
+
 # Decoder adapted from BencodePy by Eric Weast
 # Copyright (C) 2014, 2015 by Eric Weast
 @dataclass
 class Decoder:
-    data: Any
+    data: bytes
     idx: int
 
     def _parse(self):
-        char = self.data[self.idx: self.idx + 1]
-        if char == b'i':
+        char = self.data[self.idx : self.idx + 1]
+        if char == b"i":
             self.idx += 1
-            return int(self._read_to(b'e'))
-        elif char in [b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9']:
-            str_len = int(self._read_to(b':'))
+            return int(self._read_to(b"e"))
+        elif char in [b"0", b"1", b"2", b"3", b"4", b"5", b"6", b"7", b"8", b"9"]:
+            str_len = int(self._read_to(b":"))
             return self._read(str_len)
-        elif char == b'l':
+        elif char == b"l":
             return self._parse_list()
+        elif char == b"d":
+            return self._parse_dict()
 
-    def _read(self, i: int):
+        return b""
+
+    def _read(self, i: int) -> bytes:
         bytes = self.data[self.idx : self.idx + i]
         self.idx += i
 
@@ -42,28 +47,39 @@ class Decoder:
     def _read_to(self, terminator: bytes):
         try:
             i = self.data.index(terminator, self.idx)
-            bytes = self.data[self.idx:i]
+            bytes = self.data[self.idx : i]
             self.idx = i + 1
             return bytes
         except ValueError:
             raise ValueError("Unable to find terminator.")
 
-    def _parse_list(self):
+    def _parse_list(self) -> list[bytes]:
         self.idx += 1
         l = []
-        while self.data[self.idx : self.idx + 1] != b'e':
+        while self.data[self.idx : self.idx + 1] != b"e":
             l.append(self._parse())
         self.idx += 1
         return l
 
-    
+    def _parse_dict(self):
+        self.idx += 1
+        d = {}
+        while self.data[self.idx : self.idx + 1] != b"e":
+            key = self._parse()
+            val = self._parse()
+            d[key] = val
+        return d
+
+
 def decode_bencode(bencoded_value):
     decoder = Decoder(bencoded_value, 0)
 
     return decoder._parse()
 
+
 def parse_list(bencoded_value, idx):
     pass
+
 
 def main():
     command = sys.argv[1]
