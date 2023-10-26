@@ -13,8 +13,9 @@ from dataclasses import dataclass
 # - decode_bencode(b"10:hello12345") -> b"hello12345"
 
 
-# Decoder adapted from BencodePy by Eric Weast
+# Decoder originally from BencodePy by Eric Weast
 # Copyright (C) 2014, 2015 by Eric Weast
+# Modified by mvsrgc on 10-2023
 @dataclass
 class Decoder:
     data: bytes
@@ -65,7 +66,7 @@ class Decoder:
         self.idx += 1
         d = {}
         while self.data[self.idx : self.idx + 1] != b"e":
-            key = self._parse()
+            key = self._parse().decode()
             val = self._parse()
             d[key] = val
         return d
