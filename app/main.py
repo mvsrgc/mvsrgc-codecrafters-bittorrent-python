@@ -71,11 +71,14 @@ class Decoder:
             d[key] = val
         return d
 
+    def decode(self):
+        return self._parse()
+
 
 def decode_bencode(bencoded_value):
     decoder = Decoder(bencoded_value, 0)
 
-    return decoder._parse()
+    return decoder.decode()
 
 
 def parse_list(bencoded_value, idx):
