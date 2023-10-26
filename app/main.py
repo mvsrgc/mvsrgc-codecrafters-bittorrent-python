@@ -25,6 +25,8 @@ class Decoder:
         elif char in [b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9']:
             str_len = int(self._read_to(b':'))
             return self._read(str_len)
+        elif char == b'l':
+            return self._parse_list()
 
     def _read(self, i: int):
         bytes = self.data[self.idx : self.idx + i]
@@ -44,27 +46,19 @@ class Decoder:
         except ValueError:
             raise ValueError("Unable to find terminator.")
 
+    def _parse_list(self):
+        self.idx += 1
+        l = []
+        while self.data[self.idx : self.idx + 1] != b'e':
+            l.append(self._parse())
+        self.idx += 1
+        return l
+
     
 def decode_bencode(bencoded_value):
     decoder = Decoder(bencoded_value, 0)
 
     return decoder._parse()
-
-    if chr(bencoded_value[0]).isdigit():
-        first_colon_index = bencoded_value.find(b":")
-        if first_colon_index == -1:
-            raise ValueError("Invalid encoded string")
-        return bencoded_value[first_colon_index+1:]
-    elif chr(bencoded_value[0]) == 'i':
-        if chr(bencoded_value[-1]) != 'e':
-            raise ValueError("Invalid encoded integer")
-        return int(bencoded_value[1:len(bencoded_value) - 1])
-    elif chr(bencoded_value[0]) == 'l':
-        return parse_list(bencoded_value, 0)
-
-    else:
-        raise NotImplementedError("Only strings are supported at the moment")
-
 
 def parse_list(bencoded_value, idx):
     pass
